@@ -21,9 +21,9 @@ pos_cnf = {
         ["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
         ["X1", "X1", "X2", "X3", "X4", "X5"],  # Cláusula 2
         ["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
-        ["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
-        ["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
-        ["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
+        #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
+        #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
+        #["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
     ],
     'variaveis': ['X1', 'X2', 'X3', 'X4', 'X5', 'X6'],
     'valoracao': {
@@ -37,64 +37,29 @@ pos_cnf = {
 }
 
 def reducao(formula):
-    grafo = {
-        'V': ['C'],
-        'C': [],
-        'Ciclos': [],
-        'Nos_false': [],
-        'Nos_true': []
-    }
-
     G = nx.Graph()
     G.add_node('V')
-    G.add_node('C')
-    G.add_edge('V', 'C')
+    
     nx.set_node_attributes(G, colors, 'color')
-    ciclo = ['C']
-
-    """ for variavel in formula["variaveis"]:
-        grafo[variavel] = set() """
-
-    #print(G.nodes)
 
     clausula = formula["clausulas"][2]
-    #G.add_nodes_from(clausula)
 
-    for i in range(len(clausula)):
-        variavel = clausula[i]
-        vertice = f"V{i}{variavel}"
-        grafo[vertice] = set()
+    count_clausula = 1
+    for clausula in formula["clausulas"]:
+        G.add_node(f"C{count_clausula}")
+        G.add_edge('V', f"C{count_clausula}")
         
+        criar_ciclos_clausula(G, clausula, count_clausula)
+            
+        criar_vertices_variavel(formula, G, clausula)  
 
-        if i == 0:
-            grafo[vertice].add('C')
-            grafo[vertice].add(clausula[i + 1])
-            G.add_node(variavel)
-            G.add_edge('C', variavel)
+        count_clausula += 1      
         
-        elif i == len(formula["clausulas"]) - 1:
-            grafo[vertice].add('C')
-            grafo[vertice].add(clausula[i - 1])
-            G.add_node(variavel)
-            G.add_edge('C', variavel)
-        
-        else:
-            grafo[vertice].add(clausula[i - 1])
-            grafo[vertice].add(clausula[i + 1])
-            G.add_node(variavel)
-        
-            G.add_edge(clausula[i - 1], variavel)
-            G.add_edge(clausula[i + 1], variavel)
-        
+    return G
 
-        ciclo.append(vertice)
-
-    
-
+def criar_vertices_variavel(formula, G, clausula):
     for variavel in clausula:
         if formula["valoracao"][variavel[:2]] == True:
-            grafo["Nos_true"].append(variavel)
-            grafo["Nos_false"].append('none')
             G.add_node(f"T{variavel}")
             G.add_node(f"Tnone{variavel}")
 
@@ -102,22 +67,24 @@ def reducao(formula):
             G.add_edge(f"T{variavel}", f"Tnone{variavel}")
 
         else:
-            grafo["Nos_false"].append(variavel)
-            grafo["Nos_true"].append('none')
             G.add_node(f"F{variavel}")
             G.add_node(f"Fnone{variavel}")
 
             G.add_edge(variavel, f"F{variavel}")
-            G.add_edge(f"F{variavel}", f"Fnone{variavel}")        
+            G.add_edge(f"F{variavel}", f"Fnone{variavel}")
 
-    show_graph(G)
-    #grafo[formula["variaveis"][0]].add('C')
-    #grafo[formula["variaveis"][len(formula["variaveis"]) - 1]].add('C')
-
-    grafo["Ciclos"].append(tuple(ciclo))
+def criar_ciclos_clausula(G, clausula, count_clausula):
+    for i in range(len(clausula)):
+        variavel = f"C{count_clausula}{clausula[i]}"
+        G.add_node(variavel)
+            
+        if i == 0 or i == len(clausula) - 1:
+            G.add_edge(f"C{count_clausula}", variavel)
+            
+        else:            
+            G.add_edge(clausula[i - 1], variavel)
+            G.add_edge(clausula[i + 1], variavel)
     
-    print(grafo)
-
 def show_graph(G):
     print(G.nodes)
     print(G.edges)
@@ -167,7 +134,6 @@ def show_graph(G):
                 pos[node] = (pos_x, pos_y)
             
             else:
-                print('aqui')
                 pos[node] = (pos_x, pos_y)
                 pos_x += 2
                 pos_y = 2    
@@ -181,15 +147,12 @@ def show_graph(G):
 
             if pos_x == 0:
                 pos_x = 2
+
+    pos = nx.nx_pydot.graphviz_layout(G, root='V')
     nx.draw(G, pos, with_labels=True, font_weight='bold')
     plt.show()
 
-
-
 def main():
-    
-
-    print(pos_cnf["clausulas"][0][0])
 
     grafo = {
         
@@ -201,13 +164,7 @@ def main():
         'cores': set()
     }
 
-    reducao(pos_cnf)
-
-    """ G = nx.Graph()
-    G.add_node(1)
-    G.add_node(2)
-
-    G.add_edge(1, 2)
-    print(G.) """
+    grafo = reducao(pos_cnf)
+    show_graph(grafo)
 
 main()
