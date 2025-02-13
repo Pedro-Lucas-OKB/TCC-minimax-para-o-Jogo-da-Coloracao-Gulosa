@@ -4,6 +4,7 @@ from sympy.logic.boolalg import to_cnf
 from sympy.abc import xi """
 from itertools import count
 from math import e
+from matplotlib.pylab import f
 import networkx as nx
 import matplotlib.pyplot as plt
 from numpy import var
@@ -19,7 +20,7 @@ colors = {
 pos_cnf = {
     'clausulas': [
         ["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
-        ["X1", "X1", "X2", "X3", "X4", "X5"],  # Cláusula 2
+        ["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
         ["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
         #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
         #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
@@ -51,27 +52,24 @@ def reducao(formula):
         
         criar_ciclos_clausula(G, clausula, count_clausula)
             
-        criar_vertices_variavel(formula, G, clausula)  
+        count_clausula += 1
 
-        count_clausula += 1      
+    criar_vertices_variavel(formula, G)  
         
     return G
 
-def criar_vertices_variavel(formula, G, clausula):
-    for variavel in clausula:
-        if formula["valoracao"][variavel[:2]] == True:
-            G.add_node(f"T{variavel}")
-            G.add_node(f"Tnone{variavel}")
+def criar_vertices_variavel(formula, G):
+    for variavel in formula["variaveis"]:
+        G.add_node(variavel)
+        G.add_node(f"{variavel}\'")
 
-            G.add_edge(variavel, f"T{variavel}")
-            G.add_edge(f"T{variavel}", f"Tnone{variavel}")
-
-        else:
-            G.add_node(f"F{variavel}")
-            G.add_node(f"Fnone{variavel}")
-
-            G.add_edge(variavel, f"F{variavel}")
-            G.add_edge(f"F{variavel}", f"Fnone{variavel}")
+        G.add_edge(variavel, f"{variavel}\'")
+    
+        for vertice in G.nodes:
+            if variavel in vertice and variavel != vertice:
+                G.add_edge(variavel, vertice)
+                #print(variavel, vertice)
+        
 
 def criar_ciclos_clausula(G, clausula, count_clausula):
     for i in range(len(clausula)):
@@ -82,8 +80,13 @@ def criar_ciclos_clausula(G, clausula, count_clausula):
             G.add_edge(f"C{count_clausula}", variavel)
             
         else:            
-            G.add_edge(clausula[i - 1], variavel)
-            G.add_edge(clausula[i + 1], variavel)
+            G.add_edge(f"C{count_clausula}{clausula[i - 1]}", variavel)
+            if f"C{count_clausula}{clausula[i - 1]}" == variavel:
+                print(clausula[i - 1], variavel)
+
+            G.add_edge(f"C{count_clausula}{clausula[i + 1]}", variavel)
+            if f"C{count_clausula}{clausula[i + 1]}" == variavel:
+                print(clausula[i + 1], variavel)
     
 def show_graph(G):
     print(G.nodes)
@@ -148,8 +151,38 @@ def show_graph(G):
             if pos_x == 0:
                 pos_x = 2
 
-    pos = nx.nx_pydot.graphviz_layout(G, root='V')
-    nx.draw(G, pos, with_labels=True, font_weight='bold')
+    pos = nx.nx_pydot.graphviz_layout(G, prog='dot')
+    
+    pos_phi = {
+    # Camada superior
+    "V": (250, 800),
+
+    # Camada intermediária (conjuntos C1, C2, C3)
+    "C1": (100, 650),
+    "C2": (250, 650),
+    "C3": (400, 650),
+
+    # Variáveis associadas aos conjuntos
+    "C1X1": (25, 550), "C1X2": (50, 550), "C1X3": (75, 550),
+    "C1X4": (100, 550), "C1X5": (125, 550), "C1X6": (150, 550),
+
+    "C2X1": (200, 550), "C2X1'": (225, 550),
+    "C2X2": (250, 550), "C2X3": (275, 550), "C2X4": (300, 550), "C2X5": (325, 550),
+
+    "C3X2": (375, 550), "C3X3": (400, 550), "C3X4": (425, 550),
+    "C3X5": (450, 550), "C3X6": (475, 550), "C3X6'": (500, 550),
+
+    # Camada das variáveis principais
+    "X1": (100, 450), "X1'": (100, 400),
+    "X2": (200, 450), "X2'": (200, 400),
+    "X3": (300, 450), "X3'": (300, 400),
+    "X4": (400, 450), "X4'": (400, 400),
+    "X5": (500, 450), "X5'": (500, 400),
+    "X6": (600, 450), "X6'": (600, 400)
+    }
+
+    print(pos)
+    nx.draw(G, pos_phi, with_labels=True, font_weight='bold')
     plt.show()
 
 def main():
