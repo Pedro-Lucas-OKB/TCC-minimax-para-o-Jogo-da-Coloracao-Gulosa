@@ -4,36 +4,46 @@ from sympy.logic.boolalg import to_cnf
 from sympy.abc import xi """
 from itertools import count
 from math import e
+from turtle import color
 from matplotlib.pylab import f
 import networkx as nx
 import matplotlib.pyplot as plt
 from numpy import var
 
+jogadas = {
+    'Alice': 0,
+    'Bob': 1
+}
+
 colors = {
-        1: 'red',
-        2: 'green',
-        3: 'blue',
-        4: 'yellow',
-        0: 'none',
-    }
+    1: 'red',
+    2: 'green',
+    3: 'blue',
+    4: 'yellow',
+    0: 'gray',
+}
 
 pos_cnf = {
     'clausulas': [
         ["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
-        ["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
-        ["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
+        #["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
+        #["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
         #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
         #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
         #["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
+        #["X1", "X1\'", "X1\'\'", "X2", "X2\'", "X2\'\'"],  # Cláusula 1
+        #["X2\'\'\'", "X2\'\'\'\'", "X2\'\'\'\'\'", "X3", "X3\'", "X3\'\'"],  # Cláusula 2
+        #["X3\'\'\'", "X3\'\'\'\'", "X3\'\'\'\'\'", "X4", "X4\'", "X4\'\'"],  # Cláusula 3
+        #["X4\'\'\'", "X4\'\'\'\'", "X4\'\'\'\'\'", "X1\'\'\'", "X1\'\'\'\'", "X1\'\'\'\'\'"],  # Cláusula 4
     ],
     'variaveis': ['X1', 'X2', 'X3', 'X4', 'X5', 'X6'],
     'valoracao': {
         'X1': False,
         'X2': False,
-        'X3': True,
-        'X4': True,
+        'X3': False,
+        'X4': False,
         'X5': False,
-        'X6': True,
+        'X6': False,
     }
 }
 
@@ -41,10 +51,6 @@ def reducao(formula):
     G = nx.Graph()
     G.add_node('V')
     
-    nx.set_node_attributes(G, colors, 'color')
-
-    clausula = formula["clausulas"][2]
-
     count_clausula = 1
     for clausula in formula["clausulas"]:
         G.add_node(f"C{count_clausula}")
@@ -56,7 +62,25 @@ def reducao(formula):
 
     criar_vertices_variavel(formula, G)  
         
+    nx.set_node_attributes(G, colors[0], 'color')
+
+    pintar_variaveis(G, formula)
+
+    """ G.add_edge("X1", "auxred")
+    G.add_edge("X2", "auxred2")
+
+    G.nodes["auxred"]["color"] = colors[2]
+    G.nodes["auxred2"]["color"] = colors[2] """
+
     return G
+
+def pintar_variaveis(G, formula):
+    for vertice in G.nodes:
+        if vertice in formula["variaveis"]:
+            if formula["valoracao"][vertice] == False:
+                G.nodes[vertice]["color"] = colors[1]
+            else:
+                G.nodes[f"{vertice}\'"]["color"] = colors[1]
 
 def criar_vertices_variavel(formula, G):
     for variavel in formula["variaveis"]:
@@ -70,7 +94,6 @@ def criar_vertices_variavel(formula, G):
                 G.add_edge(variavel, vertice)
                 #print(variavel, vertice)
         
-
 def criar_ciclos_clausula(G, clausula, count_clausula):
     for i in range(len(clausula)):
         variavel = f"C{count_clausula}{clausula[i]}"
@@ -178,12 +201,94 @@ def show_graph(G):
     "X3": (300, 450), "X3'": (300, 400),
     "X4": (400, 450), "X4'": (400, 400),
     "X5": (500, 450), "X5'": (500, 400),
-    "X6": (600, 450), "X6'": (600, 400)
+    "X6": (600, 450), "X6'": (600, 400),
+
+    "auxred": (50, 475),
+    "auxred2": (150, 475),
     }
 
-    print(pos)
-    nx.draw(G, pos_phi, with_labels=True, font_weight='bold')
+    #print(pos)
+
+    cores_nos = nx.get_node_attributes(G, 'color')
+
+    lista_cores = [cores_nos[node] for node in G.nodes]
+    nx.draw(G, pos_phi, with_labels=True, font_weight='bold', node_color=lista_cores, node_size=1200, font_size=9)
     plt.show()
+
+def minimax(G, k, jogada):
+    if grafo_colorido(G, k): 
+        #show_graph(G)
+        return True
+
+    if vertice_nao_colorivel(G, k): 
+        #show_graph(G)
+        return False
+    
+    vertices_nao_coloridos = [vertice for vertice in G.nodes if G.nodes[vertice]["color"] == colors[0]]
+    
+    if jogada == jogadas["Alice"]:
+        print(f"Jogada: Alice | Vertices não coloridos: {vertices_nao_coloridos}")
+        for vertice in vertices_nao_coloridos:
+            index  = 1
+            
+            while cores_vizinhos(G, vertice, colors[index]):
+                index += 1
+            
+            G.nodes[vertice]["color"] = colors[index]
+            print(vertice, G.nodes[vertice]["color"])
+
+            if minimax(G, k, jogadas["Bob"]): return True
+
+            G.nodes[vertice]["color"] = colors[0]
+        
+        return False
+    elif jogada == jogadas["Bob"]:
+        print(f"Jogada: Bob | Vertices não coloridos: {vertices_nao_coloridos}")
+        for vertice in vertices_nao_coloridos:
+            index  = 1
+            
+            while cores_vizinhos(G, vertice, colors[index]):
+                index += 1
+            
+            G.nodes[vertice]["color"] = colors[index]
+            print(vertice, G.nodes[vertice]["color"])
+
+            if minimax(G, k, jogadas["Alice"]) == False: return False
+
+            G.nodes[vertice]["color"] = colors[0]
+
+        return True
+ 
+def grafo_colorido(G, qtd_cores):
+    for vertice in G.nodes:
+        if G.nodes[vertice]["color"] == colors[qtd_cores + 1] or G.nodes[vertice]["color"] == colors[0]:
+            return False
+    return True
+
+def vertice_nao_colorivel(G, k):
+    for vertice in G.nodes:
+        cores = []
+        vizinhos = list(G.neighbors(vertice))
+
+        for vizinho in vizinhos:
+            if G.nodes[vizinho]["color"] not in cores and G.nodes[vizinho]["color"] != colors[0]: cores.append(G.nodes[vizinho]["color"])
+        
+        if len(cores) >= k: 
+            print(f"Vertice {vertice} não colorível | Cores: {cores}")
+            return True
+
+    return False
+
+def cores_vizinhos(G, vertice, cor):
+    vizinhos = list(G.neighbors(vertice))
+
+    for vizinho in vizinhos:
+        if cor == G.nodes[vizinho]["color"]:
+            return True
+    
+    return False
+    
+                
 
 def main():
 
@@ -198,6 +303,14 @@ def main():
     }
 
     grafo = reducao(pos_cnf)
+    #grafo.nodes["V"]["color"] = colors[1]
+    #print(nx.get_node_attributes(grafo, 'color'))
+    #show_graph(grafo)
+    #print(list(grafo.neighbors("V")))
+    
+    res = minimax(grafo, 3, jogadas["Bob"])
     show_graph(grafo)
+
+    print(res)
 
 main()
