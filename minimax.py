@@ -25,25 +25,53 @@ colors = {
 
 pos_cnf = {
     'clausulas': [
-        ["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
+        #["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
         #["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
         #["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
         #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
         #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
         #["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
-        #["X1", "X1\'", "X1\'\'", "X2", "X2\'", "X2\'\'"],  # Cláusula 1
-        #["X2\'\'\'", "X2\'\'\'\'", "X2\'\'\'\'\'", "X3", "X3\'", "X3\'\'"],  # Cláusula 2
-        #["X3\'\'\'", "X3\'\'\'\'", "X3\'\'\'\'\'", "X4", "X4\'", "X4\'\'"],  # Cláusula 3
-        #["X4\'\'\'", "X4\'\'\'\'", "X4\'\'\'\'\'", "X1\'\'\'", "X1\'\'\'\'", "X1\'\'\'\'\'"],  # Cláusula 4
+        #"X1_1", "X1_2", "X1_3", "X2_1", "X2_2", "X2_3"],  # Cláusula 1
+        #["X2_1", "X2_2", "X2_3", "X3_1", "X3_2", "X3_3"],  # Cláusula 2
+        #["X3_1", "X3_2", "X3_3", "X4_1", "X4_2", "X4_3"],  # Cláusula 3
+        #["X4_1", "X4_2", "X4_3", "X1_1", "X1_2", "X1_3"],  # Cláusula 4
+        ["X1", "X2_1", "X2_2", "X2_3", "X2_4", "X2_5"],  # Cláusula 4
+        ["X1_1", "X1_2", "X2_1", "X2_2", "X2_3", "X2_4"],  # Cláusula 4
     ],
-    'variaveis': ['X1', 'X2', 'X3', 'X4', 'X5', 'X6'],
+    'variaveis': ['X1', 'X2'],
     'valoracao': {
-        'X1': False,
-        'X2': False,
-        'X3': False,
-        'X4': False,
-        'X5': False,
-        'X6': False,
+        'X1': None,
+        'X2': None,
+        #'X3': None,
+        #'X4': None,
+        #'X5': None,
+        #'X6': None,
+    }
+}
+
+pos_cnf_jogo_valoracao = {
+    'clausulas': [
+        #["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
+        #["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
+        #["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
+        #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
+        #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
+        #["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
+        #"X1_1", "X1_2", "X1_3", "X2_1", "X2_2", "X2_3"],  # Cláusula 1
+        #["X2_1", "X2_2", "X2_3", "X3_1", "X3_2", "X3_3"],  # Cláusula 2
+        #["X3_1", "X3_2", "X3_3", "X4_1", "X4_2", "X4_3"],  # Cláusula 3
+        #["X4_1", "X4_2", "X4_3", "X1_1", "X1_2", "X1_3"],  # Cláusula 4
+        ["X1", "X2_1", "X2_2", "X2_3", "X2_4", "X2_5"],  # Cláusula 4
+        ["X1_1", "X1_2", "X2_1", "X2_2", "X2_3", "X2_4"],  # Cláusula 4
+    ],
+    'variaveis': ['X1', 'X2'],
+    'valoracao': {
+        'X1': None,
+        'X2': None,
+        #'X3': None,
+        #'X4': None,
+        #'X5': None,
+        #'X6': None,
     }
 }
 
@@ -64,7 +92,7 @@ def reducao(formula):
         
     nx.set_node_attributes(G, colors[0], 'color')
 
-    pintar_variaveis(G, formula)
+    #pintar_variaveis(G, formula)
 
     """ G.add_edge("X1", "auxred")
     G.add_edge("X2", "auxred2")
@@ -174,7 +202,7 @@ def show_graph(G):
             if pos_x == 0:
                 pos_x = 2
 
-    pos = nx.nx_pydot.graphviz_layout(G, prog='dot')
+    pos = nx.nx_pydot.graphviz_layout(G, prog='neato')
     
     pos_phi = {
     # Camada superior
@@ -186,7 +214,7 @@ def show_graph(G):
     "C3": (400, 650),
 
     # Variáveis associadas aos conjuntos
-    "C1X1": (25, 550), "C1X2": (50, 550), "C1X3": (75, 550),
+    "C1X1": (25, 550), "C1X2_1": (50, 550), "C1X2_2": (75, 550),
     "C1X4": (100, 550), "C1X5": (125, 550), "C1X6": (150, 550),
 
     "C2X1": (200, 550), "C2X1'": (225, 550),
@@ -212,12 +240,12 @@ def show_graph(G):
     cores_nos = nx.get_node_attributes(G, 'color')
 
     lista_cores = [cores_nos[node] for node in G.nodes]
-    nx.draw(G, pos_phi, with_labels=True, font_weight='bold', node_color=lista_cores, node_size=1200, font_size=9)
+    nx.draw(G, pos, with_labels=True, font_weight='bold', node_color=lista_cores, node_size=1200, font_size=9)
     plt.show()
 
 def minimax(G, k, jogada):
     if grafo_colorido(G, k): 
-        #show_graph(G)
+        show_graph(G)
         return True
 
     if vertice_nao_colorivel(G, k): 
@@ -227,7 +255,7 @@ def minimax(G, k, jogada):
     vertices_nao_coloridos = [vertice for vertice in G.nodes if G.nodes[vertice]["color"] == colors[0]]
     
     if jogada == jogadas["Alice"]:
-        print(f"Jogada: Alice | Vertices não coloridos: {vertices_nao_coloridos}")
+        #print(f"Jogada: Alice | Vertices não coloridos: {vertices_nao_coloridos}")
         for vertice in vertices_nao_coloridos:
             index  = 1
             
@@ -235,7 +263,7 @@ def minimax(G, k, jogada):
                 index += 1
             
             G.nodes[vertice]["color"] = colors[index]
-            print(vertice, G.nodes[vertice]["color"])
+            print("Jogada ALICE: " + vertice, G.nodes[vertice]["color"])
 
             if minimax(G, k, jogadas["Bob"]): return True
 
@@ -243,7 +271,7 @@ def minimax(G, k, jogada):
         
         return False
     elif jogada == jogadas["Bob"]:
-        print(f"Jogada: Bob | Vertices não coloridos: {vertices_nao_coloridos}")
+        #print(f"Jogada: Bob | Vertices não coloridos: {vertices_nao_coloridos}")
         for vertice in vertices_nao_coloridos:
             index  = 1
             
@@ -251,7 +279,7 @@ def minimax(G, k, jogada):
                 index += 1
             
             G.nodes[vertice]["color"] = colors[index]
-            print(vertice, G.nodes[vertice]["color"])
+            print("Jogada BOB: " + vertice, G.nodes[vertice]["color"])
 
             if minimax(G, k, jogadas["Alice"]) == False: return False
 
@@ -289,6 +317,41 @@ def cores_vizinhos(G, vertice, cor):
     return False
     
                 
+def minimax_cnf(formula, jogada):
+    if literal_verdadeiro(formula):
+        print(formula["valoracao"])
+        print(formula["clausulas"])
+        return True
+    
+    literais_nao_valorados = [literal for literal in formula["valoracao"] if formula["valoracao"][literal] == None]
+    if jogada == jogadas["Alice"]:
+        for literal in literais_nao_valorados:
+            formula["valoracao"][literal] = True
+
+            if minimax_cnf(formula, jogadas["Bob"]): return True
+
+            formula["valoracao"][literal] = None
+        return False
+    
+    elif jogada == jogadas["Bob"]:
+        for literal in literais_nao_valorados:
+            formula["valoracao"][literal] = False
+
+            if minimax_cnf(formula, jogadas["Alice"]) == False: return False
+
+            formula["valoracao"][literal] = None
+        return True
+
+    
+def literal_verdadeiro(formula):
+    count = 0
+    for clausula in formula["clausulas"]:
+        for literal in clausula:
+            if literal[:2] in formula["valoracao"] and formula["valoracao"][literal[:2]] == True:
+                count += 1
+                break
+    if count == len(formula["clausulas"]): return True
+    return False
 
 def main():
 
@@ -311,6 +374,9 @@ def main():
     res = minimax(grafo, 3, jogadas["Bob"])
     show_graph(grafo)
 
-    print(res)
+    print(f"Minimax grafo: {res}")
+
+    res = minimax_cnf(pos_cnf_jogo_valoracao, jogadas["Alice"])
+    print(f"Minimax CNF: {res}")
 
 main()
