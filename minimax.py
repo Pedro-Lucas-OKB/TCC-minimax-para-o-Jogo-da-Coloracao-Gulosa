@@ -267,12 +267,14 @@ def jogo_coloracao_gulosa(G, phi, jogador):
     while(jogo == 0):
         print(f"Turno: {num_turnos}")
 
-        if jogador == jogadas["Alice"] and num_turnos % 2 == 0:
+        if jogador == jogadas["Alice"]:
             vertice = input("ALICE - Digite o vértice: ")
             
             menor_cor = pegar_menor_cor(G, vertice)
 
             G.nodes[vertice]["color"] = colors[menor_cor]
+
+            jogador = jogadas["Bob"]
         else:
             G1 = G.copy()
             res = minimax(G1, 3, jogadas["Bob"])
@@ -282,6 +284,8 @@ def jogo_coloracao_gulosa(G, phi, jogador):
                 print(f"Bob vence: {res[1]} | Vertice: {res[2]} | Cor: {res[3]}")
             elif res[0] == True:
                 print(f"Bob perde: {res[1]} | Vertice: {res[2]} | Cor: {res[3]}")
+            
+            jogador = jogadas["Alice"]
     
         if grafo_colorido(G, k):
             jogo = 1
@@ -298,13 +302,13 @@ def jogo_coloracao_gulosa(G, phi, jogador):
 
 def main():
 
-    total_variaveis = 1
+    total_variaveis = 2
 
     pos_cnf_phi = {
         'clausulas': [
-            ["X1", "X1", "X1", "X1", "X1", "X1"],
-            #["X1", "X2", "X2", "X2", "X2", "X2"],
-            #["X1", "X2", "X1", "X2", "X2", "X2"],
+            ["X1", "X1", "X1", "X2", "X2", "X2"],
+            ["X1", "X2", "X2", "X2", "X2", "X2"],
+            ["X1", "X2", "X1", "X2", "X2", "X2"],
         ],
         'variaveis': [],
         'valoracao': {
@@ -319,6 +323,6 @@ def main():
     print(grafo.nodes)
    
     mostrar_grafo(grafo, pos_cnf_phi)
-    jogo_coloracao_gulosa(grafo, pos_cnf_phi, jogadas["Alice"])
+    jogo_coloracao_gulosa(grafo, pos_cnf_phi, jogadas["Bob"])
 
 main()
