@@ -100,110 +100,52 @@ def criar_ciclos_clausula(G, clausula, count_clausula):
             G.add_edge(f"C{count_clausula}L{i}{clausula[i - 1]}", variavel)
             
         else:            
-            G.add_edge(f"C{count_clausula}{clausula[i - 1]}", variavel)
+            G.add_edge(f"C{count_clausula}L{i}{clausula[i - 1]}", variavel)
             
     
-def show_graph(G):
-    #print(G.nodes)
-    #print(G.edges)
-    pos = nx.spectral_layout(G)
+def mostrar_grafo(G, phi):
+    num_de_clausulas = len(phi["clausulas"])
+    dist_entre_vert = 100
+    total_de_literais = 0
+    for i in range(num_de_clausulas):
+        total_de_literais = total_de_literais + len(phi["clausulas"][i])
 
-    pos = {
-        1: (0, 6),
-        2: (0, 4),
-        3: (-6, 2),
-        4: (-4, 2),
-        5: (-2, 2),
-        6: (2, 2),
-        7: (4, 2),
-        8: (6, 2),
-        9: (-6, 0),
-        10: (-4, 0),
-        11: (-2, 0),
-        12: (2, 0),
-        13: (4, 0),
-        14: (6, 0),
-        15: (-6, -2),
-        16: (-4, -2),
-        17: (-2, -2),
-        18: (2, -2),
-        19: (4, -2),
-        20: (6, -2),
-    }
-    
     pos = {}
-    count = 0
-    pos_x = -6
-    pos_y = 2
-    for node in G.nodes:
-        if node == 'V':
-            pos[node] = (0, 6)
-        elif node == 'C':
-            pos[node] = (0, 4)
-        else:
-            
-            if 'none' in node:
-                pos_y = -2
-                pos[node] = (pos_x, pos_y)
-                pos_x += 2
 
-            elif 'F' in node or 'T' in node:
-                pos_y = 0
-                pos[node] = (pos_x, pos_y)
-            
-            else:
-                pos[node] = (pos_x, pos_y)
-                pos_x += 2
-                pos_y = 2    
-
-                count += 1
-                if count == 6:
-                    pos_x = -6
-                    pos_y -= 2
-                    count = 0
-
-
-            if pos_x == 0:
-                pos_x = 2
-
-    pos = nx.nx_pydot.graphviz_layout(G, prog='neato')
-    
-    pos_phi = {
     # Camada superior
-    "V": (250, 800),
+    pos["V"] = ( ((total_de_literais-1)*dist_entre_vert)/2, 770)
+    
 
-    # Camada intermediária (conjuntos C1, C2, C3)
-    "C1": (100, 650),
-    "C2": (250, 650),
-    "C3": (400, 650),
-
-    # Variáveis associadas aos conjuntos
-    "C1X1": (25, 550), "C1X2_1": (50, 550), "C1X2_2": (75, 550),
-    "C1X4": (100, 550), "C1X5": (125, 550), "C1X6": (150, 550),
-
-    "C2X1": (200, 550), "C2X1'": (225, 550),
-    "C2X2": (250, 550), "C2X3": (275, 550), "C2X4": (300, 550), "C2X5": (325, 550),
-
-    "C3X2": (375, 550), "C3X3": (400, 550), "C3X4": (425, 550),
-    "C3X5": (450, 550), "C3X6": (475, 550), "C3X6'": (500, 550),
+    # Camada intermediária (C1, C2, C3, ...)
+    px = -1*dist_entre_vert
+    px_ci  = 0
+    for i in range(num_de_clausulas):
+        px = px + dist_entre_vert
+        tam_ci = len(phi["clausulas"][i])
+        if i == 0:
+            px_ci = ((tam_ci-1)*dist_entre_vert)/2
+        else:
+            tam_ci_1 = len(phi["clausulas"][i-1])
+            px_ci = px_ci + ((tam_ci + tam_ci_1)/2 + 1)*dist_entre_vert
+        pos[f"C{i+1}"] = (px_ci , 650)
+    # Variáveis associadas aos cláusulas
+        for x in range(len(phi["clausulas"][i])):
+            pos[f"C{i+1}L{x+1}{phi["clausulas"][i][x]}"] = (px, 550)
+            px = px + dist_entre_vert
+    
 
     # Camada das variáveis principais
-    "X1": (100, 450), "X1'": (100, 400),
-    "X2": (200, 450), "X2'": (200, 400),
-    "X3": (300, 450), "X3'": (300, 400),
-    "X4": (400, 450), "X4'": (400, 400),
-    "X5": (500, 450), "X5'": (500, 400),
-    "X6": (600, 450), "X6'": (600, 400),
-
-    "auxred": (50, 475),
-    "auxred2": (150, 475),
-    }
-
-    #print(pos)
-
+    v = len(phi["variaveis"])
+    espaco = ((total_de_literais - 1)*dist_entre_vert)/(v+1)
+    j = espaco
+    for i in range(v):
+        pos[f"X{i+1}"]  = (j, 350)
+        pos[f"X{i+1}'"] = (j, 300)
+        j = j + espaco
+    
     cores_nos = nx.get_node_attributes(G, 'color')
+    lista_cores = [cores_nos[vertice] for vertice in G.nodes]
 
-    lista_cores = [cores_nos[node] for node in G.nodes]
     nx.draw(G, pos, with_labels=True, font_weight='bold', node_color=lista_cores, node_size=1200, font_size=9)
     plt.show()
 
@@ -333,7 +275,7 @@ def literal_verdadeiro(formula):
     if count == len(formula["clausulas"]): return True
     return False
 
-def jogo_coloracao_gulosa(G, jogador):
+def jogo_coloracao_gulosa(G, phi, jogador):
     jogo = 0
     num_turnos = 0
     k = 3
@@ -365,7 +307,7 @@ def jogo_coloracao_gulosa(G, jogador):
             jogo = -1
             vertice = vertice_nao_colorivel(G, k)[1]
         num_turnos += 1
-        show_graph(G)
+        mostrar_grafo(G, phi)
     
     if jogo == 1:
         print("Jogo terminou com Alice vencendo")
@@ -393,13 +335,8 @@ def main():
     for i in range(total_variaveis):
         pos_cnf_phi["valoracao"][f"X{i+1}"] = None
 
-    estado = {
-        'grafo': grafo,
-        'coloracao': {vertice: None for vertice in grafo},
-        'cores': set()
-    }
-
-    grafo = reducao(pos_cnf)
+    grafo = reducao(pos_cnf_phi)
+    print(grafo.nodes)
     #grafo.nodes["V"]["color"] = colors[1]
     #print(nx.get_node_attributes(grafo, 'color'))
     #show_graph(grafo)
@@ -412,7 +349,7 @@ def main():
 
     #res = minimax_cnf(pos_cnf_jogo_valoracao, jogadas["Alice"])
     #print(f"Minimax CNF: {res}")
-
-    jogo_coloracao_gulosa(grafo, jogadas["Alice"])
+    mostrar_grafo(grafo, pos_cnf_phi)
+    jogo_coloracao_gulosa(grafo, pos_cnf_phi, jogadas["Alice"])
 
 main()
