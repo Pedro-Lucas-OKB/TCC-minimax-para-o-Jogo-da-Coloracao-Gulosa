@@ -163,51 +163,46 @@ def minimax(G, k, jogada):
     if jogada == jogadas["Alice"]:
         #print(f"Jogada: Alice | Vertices não coloridos: {vertices_nao_coloridos}")
         for vertice in vertices_nao_coloridos:
-            index  = 1
-            
-            while cores_vizinhos(G, vertice, colors[index]):
-                index += 1
-            
-            G.nodes[vertice]["color"] = colors[index]
+            menor_cor = pegar_menor_cor(G, vertice)
+            G.nodes[vertice]["color"] = colors[menor_cor]
             #print("Jogada ALICE: " + vertice, G.nodes[vertice]["color"])
 
             if minimax(G, k, jogadas["Bob"])[0]: 
                 #G.nodes[vertice]["color"] = colors[0]
+                G.nodes[vertice]["color"] = colors[0]
                 
-                return True, "A", vertice, colors[index]
+                return True, "A", vertice, colors[menor_cor]
 
             G.nodes[vertice]["color"] = colors[0]
         
-        index = 1   
-        while cores_vizinhos(G, vertices_nao_coloridos[0], colors[index]):
-            index += 1
-        #G.nodes[vertices_nao_coloridos[0]]["color"] = colors[index]
-
-        return False, "A", vertices_nao_coloridos[0], colors[index]
+        menor_cor = pegar_menor_cor(G, vertices_nao_coloridos[0])
+        return False, "A", vertices_nao_coloridos[0], colors[menor_cor]
+    
     elif jogada == jogadas["Bob"]:
         #print(f"Jogada: Bob | Vertices não coloridos: {vertices_nao_coloridos}")
         for vertice in vertices_nao_coloridos:
-            index  = 1
-            
-            while cores_vizinhos(G, vertice, colors[index]):
-                index += 1
-            
-            G.nodes[vertice]["color"] = colors[index]
+            menor_cor = pegar_menor_cor(G, vertice)
+            G.nodes[vertice]["color"] = colors[menor_cor]
             #print("Jogada BOB: " + vertice, G.nodes[vertice]["color"])
             
             if minimax(G, k, jogadas["Alice"])[0] == False: 
                 #G.nodes[vertice]["color"] = colors[0]
-                
-                return False, "B", vertice, colors[index]
+                G.nodes[vertice]["color"] = colors[0]
+            
+                return False, "B", vertice, colors[menor_cor]
 
             G.nodes[vertice]["color"] = colors[0]
 
-        index = 1   
-        while cores_vizinhos(G, vertices_nao_coloridos[0], colors[index]):
-            index += 1
+        menor_cor = pegar_menor_cor(G, vertices_nao_coloridos[0])
         #G.nodes[vertices_nao_coloridos[0]]["color"] = colors[index]
 
-        return True, "B", vertices_nao_coloridos[0], colors[index]
+        return True, "B", vertices_nao_coloridos[0], colors[menor_cor]
+
+def pegar_menor_cor(G, vertice):
+    index = 1   
+    while verificar_cores_vizinhas(G, vertice, colors[index]):
+        index += 1
+    return index
  
 def grafo_colorido(G, qtd_cores):
     for vertice in G.nodes:
@@ -229,7 +224,7 @@ def vertice_nao_colorivel(G, k):
 
     return False, None
 
-def cores_vizinhos(G, vertice, cor):
+def verificar_cores_vizinhas(G, vertice, cor):
     vizinhos = list(G.neighbors(vertice))
 
     for vizinho in vizinhos:
@@ -287,7 +282,7 @@ def jogo_coloracao_gulosa(G, phi, jogador):
             vertice = input("ALICE - Digite o vértice: ")
             
             index = 1   
-            while cores_vizinhos(G, vertice, colors[index]):
+            while verificar_cores_vizinhas(G, vertice, colors[index]):
                 index += 1
 
             G.nodes[vertice]["color"] = colors[index]
@@ -318,7 +313,7 @@ def jogo_coloracao_gulosa(G, phi, jogador):
 
 def main():
 
-    total_variaveis = 6
+    total_variaveis = 1
 
     pos_cnf_phi = {
         'clausulas': [
