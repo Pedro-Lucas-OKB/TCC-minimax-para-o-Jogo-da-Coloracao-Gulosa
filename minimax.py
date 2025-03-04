@@ -1,14 +1,5 @@
-""" from copy import deepcopy
-from sympy import true, false
-from sympy.logic.boolalg import to_cnf
-from sympy.abc import xi """
-from itertools import count
-from math import e
-from turtle import color
-from matplotlib.pylab import f
 import networkx as nx
 import matplotlib.pyplot as plt
-from numpy import var
 
 jogadas = {
     'Alice': 0,
@@ -21,32 +12,6 @@ colors = {
     3: 'blue',
     4: 'yellow',
     0: 'gray',
-}
-
-pos_cnf = {
-    'clausulas': [
-        #["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
-        #["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
-        #["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
-        #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
-        #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
-        #["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
-        #"X1_1", "X1_2", "X1_3", "X2_1", "X2_2", "X2_3"],  # Cláusula 1
-        #["X2_1", "X2_2", "X2_3", "X3_1", "X3_2", "X3_3"],  # Cláusula 2
-        #["X3_1", "X3_2", "X3_3", "X4_1", "X4_2", "X4_3"],  # Cláusula 3
-        #["X4_1", "X4_2", "X4_3", "X1_1", "X1_2", "X1_3"],  # Cláusula 4
-        ["X1", "X2_1", "X2_2", "X2_3", "X2_4", "X2_5"],  # Cláusula 4
-        ["X1_1", "X1_2", "X2_1", "X2_2", "X2_3", "X2_4"],  # Cláusula 4
-    ],
-    'variaveis': ['X1', 'X2'],
-    'valoracao': {
-        'X1': None,
-        'X2': None,
-        #'X3': None,
-        #'X4': None,
-        #'X5': None,
-        #'X6': None,
-    }
 }
 
 pos_cnf_jogo_valoracao = {
@@ -124,20 +89,19 @@ def criar_vertices_variavel(formula, G):
         
 def criar_ciclos_clausula(G, clausula, count_clausula):
     for i in range(len(clausula)):
-        variavel = f"C{count_clausula}{clausula[i]}"
+        variavel = f"C{count_clausula}L{i + 1}{clausula[i]}"
         G.add_node(variavel)
             
-        if i == 0 or i == len(clausula) - 1:
+        if i == 0:
             G.add_edge(f"C{count_clausula}", variavel)
+        
+        elif i == len(clausula) - 1:
+            G.add_edge(f"C{count_clausula}", variavel)
+            G.add_edge(f"C{count_clausula}L{i}{clausula[i - 1]}", variavel)
             
         else:            
             G.add_edge(f"C{count_clausula}{clausula[i - 1]}", variavel)
-            if f"C{count_clausula}{clausula[i - 1]}" == variavel:
-                print(clausula[i - 1], variavel)
-
-            G.add_edge(f"C{count_clausula}{clausula[i + 1]}", variavel)
-            if f"C{count_clausula}{clausula[i + 1]}" == variavel:
-                print(clausula[i + 1], variavel)
+            
     
 def show_graph(G):
     #print(G.nodes)
@@ -402,8 +366,6 @@ def jogo_coloracao_gulosa(G, jogador):
             vertice = vertice_nao_colorivel(G, k)[1]
         num_turnos += 1
         show_graph(G)
-
-            
     
     if jogo == 1:
         print("Jogo terminou com Alice vencendo")
@@ -414,9 +376,22 @@ def jogo_coloracao_gulosa(G, jogador):
 
 def main():
 
-    grafo = {
-        
+    total_variaveis = 6
+
+    pos_cnf_phi = {
+        'clausulas': [
+            ["X1", "X1", "X1", "X1", "X1", "X1"],
+            #["X1", "X2", "X2", "X2", "X2", "X2"],
+            #["X1", "X2", "X1", "X2", "X2", "X2"],
+        ],
+        'variaveis': [],
+        'valoracao': {
+        }
     }
+
+    pos_cnf_phi["variaveis"] = [f"X{i+1}" for i in range(total_variaveis)]
+    for i in range(total_variaveis):
+        pos_cnf_phi["valoracao"][f"X{i+1}"] = None
 
     estado = {
         'grafo': grafo,
