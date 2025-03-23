@@ -1,6 +1,4 @@
-from turtle import color
-import networkx as nx
-import matplotlib.pyplot as plt
+from visualizacao import mostrar_grafo
 
 jogadas = {
     'Alice': 0,
@@ -14,106 +12,6 @@ colors = {
     4: 'yellow',
     0: 'gray' # representa os vértices não coloridos
 }
-
-def reducao(formula):
-    G = nx.Graph()
-    G.add_node('V')
-    
-    count_clausula = 1
-    for clausula in formula["clausulas"]:
-        G.add_node(f"C{count_clausula}")
-        G.add_edge('V', f"C{count_clausula}")
-        
-        criar_ciclos_clausula(G, clausula, count_clausula)
-            
-        count_clausula += 1
-
-    criar_vertices_variavel(formula, G)  
-        
-    nx.set_node_attributes(G, colors[0], 'color')
-
-    return G
-
-def pintar_variaveis(G, formula):
-    for vertice in G.nodes:
-        if vertice in formula["variaveis"]:
-            if formula["valoracao"][vertice] == False:
-                G.nodes[vertice]["color"] = colors[1]
-            else:
-                G.nodes[f"{vertice}\'"]["color"] = colors[1]
-
-def criar_vertices_variavel(formula, G):
-    for variavel in formula["variaveis"]:
-        G.add_node(variavel) # X1, X2, X3, ...
-        G.add_node(f"{variavel}\'") # X1', X2', X3', ...
-
-        G.add_edge(variavel, f"{variavel}\'") # X1 - X1', X2 - X2', X3 - X3', ...
-    
-        for vertice in G.nodes:
-            if variavel in vertice and variavel != vertice:
-                G.add_edge(variavel, vertice)
-        
-def criar_ciclos_clausula(G, clausula, count_clausula):
-    for i in range(len(clausula)):
-        variavel = f"C{count_clausula}L{i + 1}{clausula[i]}" # C1L1X1, C1L2X2, C1L3X3, ...
-        G.add_node(variavel)
-            
-        if i == 0:
-            G.add_edge(f"C{count_clausula}", variavel)
-        
-        elif i == len(clausula) - 1:
-            G.add_edge(f"C{count_clausula}", variavel)
-            G.add_edge(f"C{count_clausula}L{i}{clausula[i - 1]}", variavel)
-            
-        else:            
-            G.add_edge(f"C{count_clausula}L{i}{clausula[i - 1]}", variavel)
-            
-    
-def mostrar_grafo(G, phi):
-    num_de_clausulas = len(phi["clausulas"])
-    dist_entre_vert = 100
-    total_de_literais = 0
-    for i in range(num_de_clausulas):
-        total_de_literais = total_de_literais + len(phi["clausulas"][i])
-
-    pos = {}
-
-    # Camada superior
-    pos["V"] = ( ((total_de_literais-1)*dist_entre_vert)/2, 770)
-    
-
-    # Camada intermediária (C1, C2, C3, ...)
-    px = -1*dist_entre_vert
-    px_ci  = 0
-    for i in range(num_de_clausulas):
-        px = px + dist_entre_vert
-        tam_ci = len(phi["clausulas"][i])
-        if i == 0:
-            px_ci = ((tam_ci-1)*dist_entre_vert)/2
-        else:
-            tam_ci_1 = len(phi["clausulas"][i-1])
-            px_ci = px_ci + ((tam_ci + tam_ci_1)/2 + 1)*dist_entre_vert
-        pos[f"C{i+1}"] = (px_ci , 650)
-    # Variáveis associadas aos cláusulas
-        for x in range(len(phi["clausulas"][i])):
-            pos[f"C{i+1}L{x+1}{phi["clausulas"][i][x]}"] = (px, 550)
-            px = px + dist_entre_vert
-    
-
-    # Camada das variáveis principais
-    v = len(phi["variaveis"])
-    espaco = ((total_de_literais - 1)*dist_entre_vert)/(v+1)
-    j = espaco
-    for i in range(v):
-        pos[f"X{i+1}"]  = (j, 350)
-        pos[f"X{i+1}'"] = (j, 300)
-        j = j + espaco
-    
-    cores_nos = nx.get_node_attributes(G, 'color')
-    lista_cores = [cores_nos[vertice] for vertice in G.nodes]
-
-    nx.draw(G, pos, with_labels=True, font_weight='bold', node_color=lista_cores, node_size=1200, font_size=9)
-    plt.show()
 
 def minimax(G, k, jogada):
     if grafo_colorido(G, k): 
@@ -305,32 +203,3 @@ def jogo_coloracao_gulosa(G, phi, jogador, k):
         print("Jogo terminou com Alice vencendo")
     else:
         print(f"Jogo terminou com Bob vencendo | Vertice não colorivel: {vertice}") 
-
-def main():
-
-    total_variaveis = 2
-
-    pos_cnf_phi = {
-        'clausulas': [
-            ["X1", "X2", "X2", "X2", "X2", "X1"],
-            #["X1", "X2", "X3", "X4", "X5", "X6"],
-            #["X1", "X3", "X3", "X4", "X4", "X1"],
-            #["X1", "X2", "X2", "X2", "X2", "X2"],
-            #["X1", "X2", "X1", "X2", "X2", "X2"],
-        ],
-        'variaveis': [],
-        'valoracao': {
-        }
-    }
-
-    pos_cnf_phi["variaveis"] = [f"X{i+1}" for i in range(total_variaveis)]
-    for i in range(total_variaveis):
-        pos_cnf_phi["valoracao"][f"X{i+1}"] = None
-
-    grafo = reducao(pos_cnf_phi)
-    print(grafo.nodes)
-
-    mostrar_grafo(grafo, pos_cnf_phi)
-    jogo_coloracao_gulosa(grafo, pos_cnf_phi, jogadas["Bob"], 3)
-
-main()
