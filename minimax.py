@@ -15,32 +15,6 @@ colors = {
     0: 'gray' # representa os vértices não coloridos
 }
 
-pos_cnf_jogo_valoracao = {
-    'clausulas': [
-        #["X1", "X2", "X3", "X4", "X5", "X6"],  # Cláusula 1
-        #["X1", "X1\'", "X2", "X3", "X4", "X5"],  # Cláusula 2
-        #["X2", "X3", "X4", "X5", "X6", "X6\'"],  # Cláusula 3
-        #["X1", "X2", "X3", "X3", "X5", "X6"],  # Cláusula 4
-        #["X1", "X2", "X2", "X4", "X5", "X6"],  # Cláusula 5
-        #["X1", "X3", "X3", "X4", "X5", "X6"],  # Cláusula 6
-        #"X1_1", "X1_2", "X1_3", "X2_1", "X2_2", "X2_3"],  # Cláusula 1
-        #["X2_1", "X2_2", "X2_3", "X3_1", "X3_2", "X3_3"],  # Cláusula 2
-        #["X3_1", "X3_2", "X3_3", "X4_1", "X4_2", "X4_3"],  # Cláusula 3
-        #["X4_1", "X4_2", "X4_3", "X1_1", "X1_2", "X1_3"],  # Cláusula 4
-        ["X1", "X2_1", "X2_2", "X2_3", "X2_4", "X2_5"],  # Cláusula 4
-        ["X1_1", "X1_2", "X2_1", "X2_2", "X2_3", "X2_4"],  # Cláusula 4
-    ],
-    'variaveis': ['X1', 'X2'],
-    'valoracao': {
-        'X1': None,
-        'X2': None,
-        #'X3': None,
-        #'X4': None,
-        #'X5': None,
-        #'X6': None,
-    }
-}
-
 def reducao(formula):
     G = nx.Graph()
     G.add_node('V')
@@ -78,7 +52,6 @@ def criar_vertices_variavel(formula, G):
         for vertice in G.nodes:
             if variavel in vertice and variavel != vertice:
                 G.add_edge(variavel, vertice)
-                #print(variavel, vertice)
         
 def criar_ciclos_clausula(G, clausula, count_clausula):
     for i in range(len(clausula)):
@@ -144,55 +117,34 @@ def mostrar_grafo(G, phi):
 
 def minimax(G, k, jogada):
     if grafo_colorido(G, k): 
-        #show_graph(G)
-        #print("aqui")
         return True, "AEND", None, None
 
     if vertice_nao_colorivel(G, k)[0]: 
-        #show_graph(G)
-        #print("aqui")
         return False, "BEND", None, None
     
     vertices_nao_coloridos = pegar_vertices_nao_coloridos(G)
     if jogada == jogadas["Alice"]:
-        #print(f"Jogada: Alice | Vertices não coloridos: {vertices_nao_coloridos}")
-        res = (None, None, None, None)
         for vertice in vertices_nao_coloridos:
-            #if G.nodes[vertice]["color"] != colors[0]: continue
             colorir_vertice(G, vertice)
-            #print("Jogada ALICE: " + vertice, G.nodes[vertice]["color"])
 
-            res = minimax(G, k, jogadas["Bob"])
-            if res[0] == True: 
-                G.nodes[vertice]["color"] = colors[0]
-                #print("aqui")
+            if minimax(G, k, jogadas["Bob"])[0] == True: 
+                descolorir_vertice(G, vertice)
                 return True, "A", vertice, G.nodes[vertice]["color"]
 
             descolorir_vertice(G, vertice)
         
-        #vertices_nao_coloridos = pegar_vertices_nao_coloridos(G)
-        #menor_cor = pegar_menor_cor(G, vertices_nao_coloridos[0])
         return False, "A", None, None
     
     elif jogada == jogadas["Bob"]:
-        #print(f"Jogada: Bob | Vertices não coloridos: {vertices_nao_coloridos}")
-        res = (None, None, None, None)
         for vertice in vertices_nao_coloridos:
-            #if G.nodes[vertice]["color"] != colors[0]: continue
             colorir_vertice(G, vertice)
-            #print("Jogada BOB: " + vertice, G.nodes[vertice]["color"])
-            #G_copia = G.copy()
             
-            res = minimax(G, k, jogadas["Alice"])
-            if res[0] == False: 
-                G.nodes[vertice]["color"] = colors[0]
-                #print("aqui")
+            if minimax(G, k, jogadas["Alice"])[0] == False: 
+                descolorir_vertice(G, vertice)
                 return False, "B", vertice, G.nodes[vertice]["color"]
 
             descolorir_vertice(G, vertice)
 
-        #vertices_nao_coloridos = [vertice for vertice in G.nodes if G.nodes[vertice]["color"] == colors[0]]
-        #menor_cor = pegar_menor_cor(G, vertices_nao_coloridos[0])
         return True, "B", None, None
 
 def pegar_vertices_nao_coloridos(G):
@@ -238,7 +190,6 @@ def verificar_cores_vizinhas(G, vertice, cor):
             return True
     
     return False
-    
                 
 def minimax_cnf(formula, jogada):
     if literal_verdadeiro(formula):
@@ -276,12 +227,18 @@ def literal_verdadeiro(formula):
     if count == len(formula["clausulas"]): return True
     return False
 
-def jogo_coloracao_gulosa(G, phi, jogador):
-    #jogador_escolhido = jogadas[input("Escolha um jogador (Alice ou Bob): ")]
-    jogador_escolhido = "a"
+def jogo_coloracao_gulosa(G, phi, jogador, k):
+    jogador_escolhido = None
+    while jogador_escolhido not in jogadas.values():
+        escolha = input("Escolha um jogador (Alice ou Bob): ")
+        if escolha in jogadas:
+            jogador_escolhido = jogadas[escolha]
+        else:
+            print("Escolha inválida. Tente novamente.")
+        
+    #jogador_escolhido = -1 # Descomente essa linha para deixar o jogo da forma IA vs IA
     jogo = 0
     num_turnos = 0
-    k = 3
 
     while(jogo == 0):
         vertices_nao_coloridos = pegar_vertices_nao_coloridos(G)
@@ -290,6 +247,7 @@ def jogo_coloracao_gulosa(G, phi, jogador):
 
         if jogador == jogadas["Alice"]:
             if jogador_escolhido == jogadas["Alice"]:
+                print("Vértices não coloridos: ", vertices_nao_coloridos)
                 vertice = input("ALICE - Digite o vértice: ")
             
                 if vertice in vertices_nao_coloridos:
@@ -300,7 +258,7 @@ def jogo_coloracao_gulosa(G, phi, jogador):
 
             else:
                 G_copia = G.copy()
-                res = minimax(G_copia, 3, jogadas["Alice"])
+                res = minimax(G_copia, k, jogadas["Alice"])
                 if res[0] == False:
                     vertice = pegar_vertices_nao_coloridos(G)[0];
                     colorir_vertice(G, vertice)
@@ -310,8 +268,10 @@ def jogo_coloracao_gulosa(G, phi, jogador):
                     print(f"Resp. MiniMax: Alice vence | Vertice: {res[2]} | Cor: {G.nodes[res[2]]['color']}")
 
             jogador = jogadas["Bob"]
+
         else:
             if jogador_escolhido == jogadas["Bob"]:
+                print("Vértices não coloridos: ", vertices_nao_coloridos)
                 vertice = input("Bob - Digite o vértice: ")
             
                 if vertice in vertices_nao_coloridos:
@@ -322,7 +282,7 @@ def jogo_coloracao_gulosa(G, phi, jogador):
 
             else:
                 G_copia = G.copy()
-                res = minimax(G_copia, 3, jogadas["Bob"])
+                res = minimax(G_copia, k, jogadas["Bob"])
                 if res[0] == True:
                     vertice = pegar_vertices_nao_coloridos(G)[0];
                     colorir_vertice(G, vertice)
@@ -370,16 +330,7 @@ def main():
     grafo = reducao(pos_cnf_phi)
     print(grafo.nodes)
 
-    """ grafo.nodes["V"]["color"] = colors[1]
-    grafo.nodes["C2L2X3"]["color"] = colors[1]
-    grafo.nodes["C2L5X4"]["color"] = colors[1]
-    grafo.nodes["C2L3X3"]["color"] = colors[2]
-    grafo.nodes["C2L4X4"]["color"] = colors[2]
-    pos_cnf_phi["valoracao"]["X3"] = True
-    pos_cnf_phi["valoracao"]["X4"] = True
-    pintar_variaveis(grafo, pos_cnf_phi) """
-
     mostrar_grafo(grafo, pos_cnf_phi)
-    jogo_coloracao_gulosa(grafo, pos_cnf_phi, jogadas["Bob"])
+    jogo_coloracao_gulosa(grafo, pos_cnf_phi, jogadas["Bob"], 3)
 
 main()
